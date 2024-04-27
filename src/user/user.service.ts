@@ -15,6 +15,7 @@ import { Role } from './entities/role.entity';
 import { Permission } from './entities/permission.entity';
 import { LoginUserDto } from './dto/login-user.dto';
 import { LoginUserVo } from './vo/login-user.vo';
+import { UpdateUserPasswordDto } from './dto/update-user-password.dto';
 
 @Injectable()
 export class UserService {
@@ -36,7 +37,6 @@ export class UserService {
     console.log(`captcha_${user.email}`);
 
     const captcha = await this.redisService.get(`captcha_${user.email}`);
-    console.log(captcha);
 
     if (!captcha) {
       throw new HttpException('验证码已失效', HttpStatus.BAD_REQUEST);
@@ -166,6 +166,57 @@ export class UserService {
         return arr;
       }, []),
     };
+  }
+
+  // 获取用户信息
+  async findUserDetailById(userId: number) {
+    const user = await this.userRepository.findOneBy({
+      id: userId,
+    });
+    if (!user) {
+      throw new HttpException('该用户不存在', HttpStatus.BAD_REQUEST);
+    }
+
+    return user;
+  }
+
+  // 普通用户/管理员更新密码
+  async updateUserPassword(
+    userId: number,
+    updatePassword: UpdateUserPasswordDto,
+  ) {
+    // 判断填入邮箱是否和注册时邮箱一致
+    const user = await this.userRepository.findOneBy({ id: userId });
+
+    if (user.email !== updatePassword.email) {
+      throw new HttpException('请输入注册时的邮箱地址', HttpStatus.BAD_REQUEST);
+    }
+    // console.log(userId, updatePassword);
+
+    // 去redis中查找验证码
+    const captcha = await this.redisService.get(
+      `update_password_captcha_${updatePassword.email}`,
+    );
+    // 如果redis中没有验证码，那么返回验证码失效
+    if (!captcha) {
+      throw new HttpException('验证码已失效', HttpStatus.BAD_REQUEST);
+    }
+    // 如果有，那就判断下redis中的captcha和传入的captcha是否相等，不相等等则返回验证码不正确
+    if (captcha !== updatePassword.captcha) {
+      throw new HttpException('验证码不正确', HttpStatus.BAD_REQUEST);
+    }
+
+    user.password = md5(updatePassword.password);
+
+    try {
+      const result = await this.userRepository.save(user);
+      console.log(result, 'result..');
+
+      return '密码修改成功';
+    } catch (e) {
+      this.logger.error(e, UserService);
+      return '密码修改失败';
+    }
   }
 
   // 初始化数据的方法，正是环境用sql导入

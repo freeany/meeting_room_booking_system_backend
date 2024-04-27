@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Inject,
+  Param,
   Post,
   Query,
   UnauthorizedException,
@@ -15,6 +16,9 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { LoginUserVo } from './vo/login-user.vo';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { GetRequestUser, RequireLogin } from 'src/custom.decorator';
+import { UserDetailVo } from './vo/user-info.vo';
+import { UpdateUserPasswordDto } from './dto/update-user-password.dto';
 
 @Controller('user')
 export class UserController {
@@ -85,6 +89,56 @@ export class UserController {
     } catch (e) {
       throw new UnauthorizedException('token 已失效，请重新登录');
     }
+  }
+
+  // 获取用户信息，用来回显数据
+  @Get('info')
+  @RequireLogin()
+  async getUserInfo(@GetRequestUser('userId') userId: number) {
+    const user = await this.userService.findUserDetailById(userId);
+    // console.log(user);
+    const vo = new UserDetailVo();
+    vo.id = user.id;
+    vo.email = user.email;
+    vo.username = user.username;
+    vo.headPic = user.headPic;
+    vo.phoneNumber = user.phoneNumber;
+    vo.nickName = user.nickName;
+    vo.createTime = user.createTime;
+    vo.isFrozen = user.isFrozen;
+
+    return vo;
+  }
+
+  @Get('update_password/captcha')
+  async updatePasswordCaptcha(@Query('address') address: string) {
+    const code = Math.random().toString().slice(2, 8);
+
+    // 5分钟的过期时间
+    await this.redisService.set(
+      `update_password_captcha_${address}`,
+      code,
+      10 * 60,
+    );
+
+    await this.emailService.sendMail({
+      to: address,
+      subject: '注册验证码',
+      html: `<p>你的注册验证码是 ${code}</p>`,
+    });
+    return '发送成功';
+  }
+
+  // 普通用户/管理员 修改密码
+  @Post(['update_password', 'admin/update_password'])
+  @RequireLogin()
+  async updatePassword(
+    @GetRequestUser('userId') userId: number,
+    @Body() passwordDto: UpdateUserPasswordDto,
+  ) {
+    // console.log(passwordDto);
+    const data = await this.userService.updateUserPassword(userId, passwordDto);
+    return data;
   }
 
   // 给从库里捞出来的到的user对象加上token
