@@ -170,7 +170,15 @@ export class UserController {
       subject: '更改用户信息验证码',
       html: `<p>你的验证码是 ${code}</p>`,
     });
+
     return '发送成功';
+  }
+
+  // 冻结用户
+  @Get('freeze')
+  async freezeUser(@Query('id') userId: number) {
+    await this.userService.freezUserById(userId);
+    return 'success';
   }
 
   // 给从库里捞出来的到的user对象加上token

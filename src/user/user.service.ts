@@ -249,6 +249,18 @@ export class UserService {
     }
   }
 
+  // 冻结用户
+  async freezUserById(userId: number) {
+    try {
+      const user = await this.userRepository.findOneBy({ id: userId });
+      user.isFrozen = true;
+
+      await this.userRepository.save(user);
+    } catch (error) {
+      throw new HttpException('未知错误', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   // 初始化数据的方法，正是环境用sql导入
   async initData() {
     const user1 = new User();
