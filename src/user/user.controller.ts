@@ -4,6 +4,7 @@ import {
   Controller,
   DefaultValuePipe,
   Get,
+  HttpException,
   HttpStatus,
   Inject,
   Param,
@@ -82,6 +83,10 @@ export class UserController {
   })
   @Get('register-captcha')
   async captcha(@Query('address') address: string) {
+    if (!address) {
+      throw new HttpException('address必传', HttpStatus.BAD_REQUEST);
+    }
+
     const code = Math.random().toString().slice(2, 8);
 
     // 5分钟的过期时间
