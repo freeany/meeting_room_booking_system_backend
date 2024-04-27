@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  DefaultValuePipe,
   Get,
   Inject,
   Param,
@@ -22,6 +23,7 @@ import { GetRequestUser, RequireLogin } from 'src/custom.decorator';
 import { UserDetailVo } from './vo/user-info.vo';
 import { UpdateUserPasswordDto } from './dto/update-user-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { generateParseIntPipe } from 'src/utils';
 
 @Controller('user')
 export class UserController {
@@ -188,26 +190,30 @@ export class UserController {
   async list(
     @Query(
       'pageNo',
-      new ParseIntPipe({
-        // 没有pageNo或pageNo不是number时报错
-        exceptionFactory() {
-          throw new BadRequestException('pageNo 应该传数字');
-        },
-      }),
+      // 设置默认值
+      new DefaultValuePipe(1),
+      // 没有pageNo或pageNo不是number时报错
+      generateParseIntPipe('pageNo'),
     )
     pageNo: number,
     @Query(
       'pageSize',
-      new ParseIntPipe({
-        // 没有pageSize或pageSize不是number时报错
-        exceptionFactory() {
-          throw new BadRequestException('pageSize 应该传数字');
-        },
-      }),
+      new DefaultValuePipe(2),
+      // 没有pageSize或pageSize不是number时报错
+      generateParseIntPipe('pageSize'),
     )
     pageSize: number,
+    @Query('username') username: string,
+    @Query('nickName') nickName: string,
+    @Query('email') email: string,
   ) {
-    return await this.userService.findUsersByPage(pageNo, pageSize);
+    return await this.userService.findUsers(
+      username,
+      nickName,
+      email,
+      pageNo,
+      pageSize,
+    );
   }
 
   // 给从库里捞出来的到的user对象加上token
