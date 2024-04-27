@@ -65,6 +65,8 @@ export class LoginGuard implements CanActivate {
       const token = authorization.split(' ')[1];
       const data = this.jwtService.verify<JwtUserData>(token);
 
+      // 这里要注意，只有经过login.guard的request请求才会有user，其他的不会有user的。
+      // 一个request请求只有一个request对象。
       request.user = {
         userId: data.userId,
         username: data.username,
