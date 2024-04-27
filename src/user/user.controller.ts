@@ -1,9 +1,11 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
   Inject,
   Param,
+  ParseIntPipe,
   Post,
   Query,
   UnauthorizedException,
@@ -179,6 +181,33 @@ export class UserController {
   async freezeUser(@Query('id') userId: number) {
     await this.userService.freezUserById(userId);
     return 'success';
+  }
+
+  // 分页获取用户列表
+  @Get('list')
+  async list(
+    @Query(
+      'pageNo',
+      new ParseIntPipe({
+        // 没有pageNo或pageNo不是number时报错
+        exceptionFactory() {
+          throw new BadRequestException('pageNo 应该传数字');
+        },
+      }),
+    )
+    pageNo: number,
+    @Query(
+      'pageSize',
+      new ParseIntPipe({
+        // 没有pageSize或pageSize不是number时报错
+        exceptionFactory() {
+          throw new BadRequestException('pageSize 应该传数字');
+        },
+      }),
+    )
+    pageSize: number,
+  ) {
+    return await this.userService.findUsersByPage(pageNo, pageSize);
   }
 
   // 给从库里捞出来的到的user对象加上token

@@ -261,6 +261,21 @@ export class UserService {
     }
   }
 
+  // 分页获取用户列表
+  async findUsersByPage(pageNo: number, pageSize: number) {
+    const skipCount = (pageNo - 1) * pageSize;
+
+    const [users, totalCount] = await this.userRepository.findAndCount({
+      skip: skipCount,
+      take: pageSize,
+    });
+
+    return {
+      users,
+      totalCount,
+    };
+  }
+
   // 初始化数据的方法，正是环境用sql导入
   async initData() {
     const user1 = new User();
