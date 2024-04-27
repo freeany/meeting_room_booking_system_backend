@@ -19,6 +19,7 @@ import { ConfigService } from '@nestjs/config';
 import { GetRequestUser, RequireLogin } from 'src/custom.decorator';
 import { UserDetailVo } from './vo/user-info.vo';
 import { UpdateUserPasswordDto } from './dto/update-user-password.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('user')
 export class UserController {
@@ -110,7 +111,9 @@ export class UserController {
     return vo;
   }
 
+  // 修改密码时发送验证码
   @Get('update_password/captcha')
+  @RequireLogin()
   async updatePasswordCaptcha(@Query('address') address: string) {
     const code = Math.random().toString().slice(2, 8);
 
@@ -139,6 +142,35 @@ export class UserController {
     // console.log(passwordDto);
     const data = await this.userService.updateUserPassword(userId, passwordDto);
     return data;
+  }
+
+  // 修改个人信息
+  @Post(['update', 'admin/update'])
+  @RequireLogin()
+  async updateUserInfo(
+    @GetRequestUser('userId') userId: number,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    const data = this.userService.updateUserInfo(userId, updateUserDto);
+    return data;
+  }
+  @Get('update/captcha')
+  @RequireLogin()
+  async updateCaptcha(@Query('address') address: string) {
+    const code = Math.random().toString().slice(2, 8);
+
+    await this.redisService.set(
+      `update_user_captcha_${address}`,
+      code,
+      10 * 60,
+    );
+
+    await this.emailService.sendMail({
+      to: address,
+      subject: '更改用户信息验证码',
+      html: `<p>你的验证码是 ${code}</p>`,
+    });
+    return '发送成功';
   }
 
   // 给从库里捞出来的到的user对象加上token
