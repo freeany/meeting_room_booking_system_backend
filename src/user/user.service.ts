@@ -182,12 +182,11 @@ export class UserService {
   }
 
   // 普通用户/管理员更新密码
-  async updateUserPassword(
-    userId: number,
-    updatePassword: UpdateUserPasswordDto,
-  ) {
+  async updateUserPassword(updatePassword: UpdateUserPasswordDto) {
     // 判断填入邮箱是否和注册时邮箱一致
-    const user = await this.userRepository.findOneBy({ id: userId });
+    const user = await this.userRepository.findOneBy({
+      username: updatePassword.username,
+    });
 
     if (user.email !== updatePassword.email) {
       throw new HttpException('请输入注册时的邮箱地址', HttpStatus.BAD_REQUEST);

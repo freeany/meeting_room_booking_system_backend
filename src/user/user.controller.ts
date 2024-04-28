@@ -89,6 +89,8 @@ export class UserController {
 
     const code = Math.random().toString().slice(2, 8);
 
+    console.log(code, 'code????');
+
     // 5分钟的过期时间
     await this.redisService.set(`captcha_${address}`, code, 5 * 60);
 
@@ -190,7 +192,7 @@ export class UserController {
   }
 
   // 修改密码时发送验证码
-  @ApiBearerAuth()
+  // @ApiBearerAuth()
   @ApiQuery({
     name: 'address',
     description: '邮箱地址',
@@ -200,9 +202,8 @@ export class UserController {
     type: String,
     description: '发送成功',
   })
-  @RequireLogin()
   @Get('update_password/captcha')
-  @RequireLogin()
+  // @RequireLogin()
   async updatePasswordCaptcha(@Query('address') address: string) {
     const code = Math.random().toString().slice(2, 8);
 
@@ -222,7 +223,7 @@ export class UserController {
   }
 
   // 普通用户/管理员 修改密码
-  @ApiBearerAuth()
+  // @ApiBearerAuth()
   @ApiBody({
     type: UpdateUserPasswordDto,
   })
@@ -231,13 +232,13 @@ export class UserController {
     description: '验证码已失效/不正确',
   })
   @Post(['update_password', 'admin/update_password'])
-  @RequireLogin()
+  // @RequireLogin()
   async updatePassword(
-    @GetRequestUser('userId') userId: number,
+    // @GetRequestUser('userId') userId: number,
     @Body() passwordDto: UpdateUserPasswordDto,
   ) {
     // console.log(passwordDto);
-    const data = await this.userService.updateUserPassword(userId, passwordDto);
+    const data = await this.userService.updateUserPassword(passwordDto);
     return data;
   }
 
