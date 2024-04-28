@@ -8,9 +8,10 @@ import { UnloginFilter } from './unlogin.filter';
 import { CustomExceptionFilter } from './custom-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AllExceptionsFilter } from './all-exception.filter';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalInterceptors(new FormatResponseInterceptor());
@@ -22,6 +23,9 @@ async function bootstrap() {
   );
   // app.useGlobalFilters(new CustomExceptionFilter());
   // app.useGlobalFilters(new UnloginFilter());
+  app.useStaticAssets('uploads', {
+    prefix: '/uploads',
+  });
 
   app.enableCors();
 
