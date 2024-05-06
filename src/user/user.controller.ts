@@ -154,7 +154,7 @@ export class UserController {
     type: RefreshTokenVo,
   })
   @Get('refresh')
-  async refresh(@Query('refreshToken') refreshToken: string) {
+  async refresh(@Query('refresh_token') refreshToken: string) {
     try {
       return this.refreshTokenUser(refreshToken, false);
     } catch (e) {
@@ -163,7 +163,7 @@ export class UserController {
   }
 
   @Get('admin/refresh')
-  async adminRefresh(@Query('refreshToken') refreshToken: string) {
+  async adminRefresh(@Query('refresh_token') refreshToken: string) {
     try {
       return this.refreshTokenUser(refreshToken, true);
     } catch (e) {
