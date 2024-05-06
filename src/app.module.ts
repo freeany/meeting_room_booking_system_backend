@@ -41,7 +41,7 @@ import { StatisticModule } from './statistic/statistic.module';
           username: configService.get('mysql_server_username'),
           password: configService.get('mysql_server_password'),
           database: configService.get('mysql_server_database'),
-          synchronize: true,
+          synchronize: false,
           logging: true,
           entities: [User, Role, Permission, MeetingRoom, Booking],
           poolSize: 10,
